@@ -1,0 +1,8 @@
+{
+  "starter_repo": "fossbk-spec/ktpmud-bkt-vuontoan-starter",
+  "starter_commit": "main",
+  "fork_url": "https://github.com/kanzz236/ktpmud-bkt-vuontoan-starter",
+  "final_commit": "main",
+  "release_tag": "bkt-2026-v1",
+  "ci_run_url": "https://github.com/kanzz236/ktpmud-bkt-vuontoan-starter/actions"
+}
