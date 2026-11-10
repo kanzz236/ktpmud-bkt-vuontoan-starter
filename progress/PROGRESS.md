@@ -6,19 +6,21 @@
 ## PC-1 — 11/11/2026
 
 ### 1.1. Tiến độ theo acceptance criteria
-<!-- Track B: B-01…B-10 (theo đề thi Track B) -->
+<!-- Track B: B-01…B-12 (theo đề thi Track B) -->
 | Mã | Trạng thái (Chưa / Đang / Xong) | Bằng chứng (commit / CI / file) | Ghi chú |
 |---|---|---|---|
-| B-01 | Xong | Commit `M0: Checkpoint 1 setup` | Đã fork repo và tạo thư mục nộp bài chuẩn schema |
-| B-02 | Xong | File `README.md` (cập nhật thông tin nhóm) | Đã giữ nguyên cấu trúc gốc, bổ sung thông tin tracking |
+| B-01 | Đang | File `README.md` & kế hoạch tích hợp | Đã xác định vị trí tích hợp vào luồng bài học hiện có |
+| B-02 | Đang | File `data/estimation_fixtures.json` (phác thảo) | Chuẩn bị dữ liệu mẫu các phép nhân/chia |
 | B-03 | Đang | File `server/estimationScorer.js` (phác thảo) | Thuật toán chấm điểm tất định với biên độ sai số |
-| B-04 | Đang | File `data/estimation_fixtures.json` (phác thảo) | Chuẩn bị 12 fixture nhân/chia mẫu |
-| B-05 | Chưa | | Tích hợp UI nhập khoảng ước lượng vào `exercise.html` |
-| B-06 | Chưa | | Viết unit test cho module chấm điểm |
-| B-07 | Chưa | | Cấu hình GitHub Actions CI |
-| B-08 | Chưa | | Kiểm thử biên (boundary test) |
-| B-09 | Chưa | | Hoàn thiện tài liệu REQUIREMENTS.md & DECISIONS.md |
-| B-10 | Chưa | | Hoàn thiện Security & AI Use checklist |
+| B-04 | Đang | Phân tích API DTO trong `DECISIONS.md` | Thiết kế đảm bảo không trả đáp án đúng về client trước khi submit |
+| B-05 | Chưa | | Lưu trạng thái làm bài vào SQLite |
+| B-06 | Chưa | | Xây dựng phản hồi sư phạm (Feedback) phân biệt ước lượng và kết quả chính xác |
+| B-07 | Xong | File `server/auth.js` (giữ nguyên gốc) | Cam kết không can thiệp vào cơ chế auth và session hiện tại |
+| B-08 | Chưa | | Xây dựng test suite tự động cho các ca test |
+| B-09 | Chưa | | Bổ sung script `npm test` vào `package.json` |
+| B-10 | Chưa | | Cấu hình GitHub Actions CI chạy test tự động |
+| B-11 | Xong | File `REQUIREMENTS.md` & chính sách bảo mật | Cam kết không sử dụng dữ liệu thật, tuân thủ dữ liệu synthetic |
+| B-12 | Chưa | | Thiết kế giao diện hỗ trợ điều hướng cơ bản bằng bàn phím |
 
 ### 1.2. Sửa đổi bắt buộc từ Checkpoint 1
 | Mục | Trạng thái | Bằng chứng |
