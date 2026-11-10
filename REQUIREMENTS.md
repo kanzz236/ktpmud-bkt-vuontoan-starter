@@ -19,3 +19,10 @@ Mở rộng hệ thống học toán lớp 3 hiện có bằng cách thêm dạn
 | **B-10** | CI Workflow | Cấu hình GitHub Actions chạy tự động `npm ci` và `npm test` trên mọi Pull Request. |
 | **B-11** | Bảo mật dữ liệu & PII | Không chứa thông tin cá nhân, secret, token; chỉ sử dụng tài khoản/dữ liệu synthetic. |
 | **B-12** | Accessibility & UX | Giao diện hỗ trợ điều hướng cơ bản bằng bàn phím (Tab/Enter) và hiển thị lỗi thân thiện. |
+
+# Test Plan — Track B
+
+1. **Normal Case:** Gửi một đáp án ước lượng nằm đúng trong khoảng $\pm 15\%$ của phép tính $\rightarrow$ Server trả về trạng thái "Hợp lý / Thành công".
+2. **Boundary Case:** Gửi đáp án sát mép biên dưới hoặc biên trên của khoảng cho phép $\rightarrow$ Server xử lý chính xác theo điều kiện toán học.
+3. **Invalid Case:** Gửi chuỗi ký tự rỗng, chữ cái, số âm, hoặc cố tình gọi API submit khi thiếu trường ước lượng $\rightarrow$ Server trả về lỗi 400 Bad Request kèm thông báo dễ hiểu.
+4. **Scoring Test:** Kiểm tra việc lưu điểm số và trạng thái hoàn thành vào SQLite, đảm bảo refresh lại trang (F5) không bị reset kết quả.
