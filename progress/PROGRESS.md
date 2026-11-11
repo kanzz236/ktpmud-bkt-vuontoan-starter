@@ -25,7 +25,7 @@
 ### 1.2. Sửa đổi bắt buộc từ Checkpoint 1
 | Mục | Trạng thái | Bằng chứng |
 |---|---|---|
-|  |  |  |
+| Không có | - | - |
 
 ### 1.3. Timeline dự kiến đến khi hoàn thành
 | Việc | Vai trò phụ trách | Mốc (CP2 15/11 · M3 · Freeze 19/11 · M4 20/11) | Ngày dự kiến |
