@@ -162,6 +162,53 @@ function seedIfEmpty() {
 seedIfEmpty();
 seedQuestionSets();
 
+/* ================= TRACK B: dạng bài "Ước lượng trước khi tính đúng" =================
+ * Chỉ THÊM, không sửa bảng/hành vi cũ (xem DECISIONS.md, ADR-01):
+ *  - cột questions.meta_json  : toán hạng của câu ước lượng (NULL với 4 type cũ)
+ *  - bảng estimation_steps    : trạng thái từng bước của học sinh (chốt ước lượng -> tính đúng)
+ *  - bộ đề 'uoc-luong-nhan-chia' gắn vào Bài 41 (Ôn tập phép nhân, phép chia), type='estimate'
+ */
+try { db.exec('ALTER TABLE questions ADD COLUMN meta_json TEXT'); } catch (_) {}
+db.exec(`
+CREATE TABLE IF NOT EXISTS estimation_steps (
+  user_id      INTEGER NOT NULL REFERENCES users(id),
+  question_id  TEXT NOT NULL,
+  set_id       TEXT NOT NULL,
+  est_mode     TEXT NOT NULL CHECK (est_mode IN ('value','range')),
+  est_low      INTEGER NOT NULL,
+  est_high     INTEGER NOT NULL,
+  est_ok       INTEGER NOT NULL,
+  est_at       TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+  exact_given  INTEGER,
+  exact_ok     INTEGER,
+  exact_at     TEXT,
+  PRIMARY KEY (user_id, question_id)
+);
+`);
+
+const ESTIMATION_SET_ID = 'uoc-luong-nhan-chia';
+const ESTIMATION_LESSON_ID = 'bai-41';
+
+/** Nạp (idempotent) bộ đề ước lượng từ data/estimation_fixtures.json — chạy được cả trên DB cũ. */
+function seedEstimationSet() {
+  const { items } = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'estimation_fixtures.json'), 'utf8'));
+  const { fixtureToQuestionRow } = require('./estimationScorer');
+  const lesson = db.prepare('SELECT id FROM lessons WHERE id=?').get(ESTIMATION_LESSON_ID);
+  const lessonId = lesson ? lesson.id : null;
+  const tx = db.transaction(() => {
+    db.prepare(`INSERT OR IGNORE INTO question_sets (id,title,kind,lesson_id,star_reward,duration_minutes) VALUES (?,?,?,?,?,?)`)
+      .run(ESTIMATION_SET_ID, 'Ước lượng trước khi tính đúng: nhân & chia', 'exercise', lessonId, 40, 0);
+    const ins = db.prepare(`INSERT OR IGNORE INTO questions (id,set_id,lesson_id,type,prompt,options_json,correct_answer,points,category,sort_order,meta_json)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?)`);
+    items.forEach((f, i) => {
+      const r = fixtureToQuestionRow(f);
+      ins.run(r.id, ESTIMATION_SET_ID, lessonId, r.type, r.prompt, null, r.correctAnswer, r.points, r.category, i + 1, JSON.stringify(r.meta));
+    });
+  });
+  tx();
+}
+seedEstimationSet();
+
 // Đảm bảo thông tin Cô Lan Anh (GV Chủ nhiệm minh họa) và học sinh luôn được cập nhật chính xác
 try {
   db.prepare("UPDATE users SET full_name = 'Cô Lan Anh (GV Chủ nhiệm minh họa)', class_name = '3A2' WHERE username = 'giaovien01'").run();

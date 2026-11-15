@@ -4,11 +4,11 @@
   "team_id": "N06",
   "members": [
     {
-      "name": "Vũ Minh Đạt",
+      "name": "Lead-BE",
       "role": "Leader"
-    }
+    },
     {
-      "name": "Phạm Vinh Quang",
+      "name": "Dev-FE",
       "role": "Member"
     }
   ]

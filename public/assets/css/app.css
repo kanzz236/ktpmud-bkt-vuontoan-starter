@@ -229,3 +229,35 @@ button:disabled { cursor: not-allowed; opacity: .75; }
   color: #0f172a;
 }
 
+
+/* --- Track B: dạng bài "Ước lượng trước khi tính đúng" (assets/js/pages/estimate.js) ---
+ * Viết bằng CSS thường để không phụ thuộc bản Tailwind đã biên dịch (offline vẫn đúng giao diện). */
+.est-card { border-radius: 24px; background: #fff; box-shadow: 0 8px 24px rgba(0,97,39,.06); padding: 24px; }
+.est-meta { font-size: 12px; font-weight: 700; color: #7c5800; margin: 0; }
+.est-title { font-size: 22px; line-height: 1.3; margin: 4px 0 0; font-weight: 700; }
+.est-step { margin-top: 16px; border-radius: 16px; background: #f2f4f2; padding: 16px; }
+.est-step h4 { margin: 0; font-size: 16px; font-weight: 700; color: #006127; }
+.est-tip { margin: 6px 0 0; font-size: 14px; color: #3f4a3f; }
+.est-fieldset { border: 0; padding: 0; margin: 12px 0 0; display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.est-fieldset legend { font-weight: 600; padding: 0; margin-bottom: 6px; }
+.est-radio { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; cursor: pointer; }
+.est-radio input { width: 20px; height: 20px; }
+.est-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 12px; }
+.est-row label { font-weight: 600; }
+.est-input { width: 140px; height: 52px; text-align: center; font-size: 24px; font-weight: 700; color: #006127; border: 2px solid #bfc9bd; border-radius: 16px; background: #fff; }
+.est-input:disabled { background: #e8ece8; color: #5b655b; }
+.est-btn { margin-top: 12px; min-height: 48px; padding: 0 22px; border: 0; border-radius: 16px; background: #006127; color: #fff; font-weight: 700; font-size: 16px; cursor: pointer; box-shadow: 0 4px 0 0 #005320; }
+.est-btn-2 { background: #006e2c; }
+.est-error { margin: 8px 0 0; font-weight: 600; color: #ba1a1a; }
+.est-error:empty { display: none; }
+.est-feedback { margin: 10px 0 0; font-weight: 600; }
+.est-feedback:empty { display: none; }
+.est-ok { color: #005320; }
+.est-bad { color: #93000a; }
+.est-reveal { margin-top: 12px; border-radius: 16px; background: #fff; padding: 12px 16px; border: 2px dashed #bfc9bd; }
+.est-reveal p { margin: 6px 0; }
+.est-compare { font-weight: 700; }
+.est-hidden { display: none !important; }
+/* Bàn phím (B-12): viền focus rõ cho mọi điều khiển trên trang làm bài */
+.est-card :focus-visible, #questions-container .opt-btn:focus-visible, #questions-container input:focus-visible,
+#btn-submit-lesson:focus-visible { outline: 3px solid #1a73e8; outline-offset: 2px; }

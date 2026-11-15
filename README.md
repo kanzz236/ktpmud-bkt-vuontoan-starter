@@ -14,12 +14,11 @@ Web học Toán lớp 3 gồm giao diện học sinh (bài học, luyện tập,
 và khu vực giáo viên (theo dõi lớp, cấp tài khoản). Đợt 1 đã nối **backend thật**:
 đăng nhập/đăng xuất, chấm điểm trên server, lưu điểm & tiến độ vào cơ sở dữ liệu SQLite.
 
-**Thông tin nhóm:**
-> - **Mã nhóm:** N06
-> - **Thành viên:** 
->   1. Vũ Minh Đạt - Team Lead & Backend/Scoring
->   2. Phạm Vinh Quang - Frontend & UI/UX
-> - **Trạng thái Checkpoint 1 (08/11):** Đã fork repo, thiết lập thư mục nộp bài `submissions/hoang_mai_toan_NXX/` và sẵn sàng phát triển tính năng.
+**Thông tin nhóm (chỉ dùng alias, không ghi họ tên/MSSV — B-11):**
+> - **Mã nhóm:** N06 · **Track:** B — "Ước lượng trước khi tính đúng"
+> - **Vai trò:** `Lead-BE` (Team Lead, backend & chấm điểm tất định) · `Dev-FE` (giao diện & UX)
+> - **Trạng thái:** đã hoàn thành dạng bài mới theo B-01…B-12 (xem mục 8 và `REQUIREMENTS.md`).
+
 ## 1. Cách chạy
 
 Yêu cầu: máy có **Node.js 18+**.
@@ -30,6 +29,15 @@ npm start       # mở http://localhost:3000
 ```
 
 Lần chạy đầu, server tự tạo `data/vuon-toan.db` và nạp dữ liệu mẫu từ `data/seed.json`.
+
+### Lệnh tối thiểu của đề thi (Track B)
+
+```bash
+npm ci               # cài đúng phiên bản trong package-lock.json
+npm run reset-db     # xoá DB cũ (data/vuon-toan.db*) để nạp lại dữ liệu mẫu + 12 fixtures ước lượng
+npm start            # http://localhost:3000
+npm test             # chạy toàn bộ test tự động (node --test, không cần cấu hình thêm)
+```
 
 ### Tài khoản mẫu
 
@@ -63,8 +71,12 @@ vuon-toan-lop-3/
 ├─ data/
 │  ├─ seed.json      # DỮ LIỆU GỐC: tài khoản mẫu, bài học, câu hỏi
 │  └─ vuon-toan.db   # CSDL SQLite (tự sinh khi chạy; sao lưu = chép file này)
+├─ test/                      # Test tự động (Track B): estimationScorer.test.js, api.integration.test.js
+├─ .github/workflows/ci.yml   # CI: npm ci + npm test trên mọi Pull Request
+├─ progress/PROGRESS.md · REQUIREMENTS.md · DECISIONS.md   # tài liệu nộp bài (Track B)
+├─ submissions/hoang_mai_toan_N06/   # thư mục nộp bài theo đúng cấu trúc đề thi (Mục 11.2)
+├─ tools/gen-estimation-fixtures.js  # sinh lại data/estimation_fixtures.json (tất định, theo seed)
 ├─ tools/build-from-original.py  # Dựng lại giao diện từ bản gốc khi cần
-├─ original-backup/  # NGUYÊN BẢN code cũ trước khi sửa (để đối chiếu/khôi phục)
 └─ HUONG-DAN-THEM-BAI.md  # Cách thêm bài học/câu hỏi mới
 ```
 
@@ -78,6 +90,9 @@ vuon-toan-lop-3/
 | GET | `/api/question-sets/:id/questions` | Câu hỏi — **không kèm đáp án** |
 | POST | `/api/submissions` | Nộp bài; server chấm, lưu điểm, cộng sao theo tiến bộ |
 | GET | `/api/leaderboard` | Bảng xếp hạng tính từ sao thật trong DB |
+| GET | `/api/estimation/sets/:setId/state` | **(Track B)** trạng thái từng bước của học sinh — khôi phục sau F5 |
+| POST | `/api/estimation/estimate` | **(Track B)** bước 1: chốt ước lượng (1 lần/câu), chưa lộ đáp án |
+| POST | `/api/estimation/exact` | **(Track B)** bước 2: nộp kết quả tính chính xác (chỉ sau bước 1), lộ đáp án + lời giải |
 | GET/POST | `/api/teacher/students` | Giáo viên xem / cấp tài khoản học sinh |
 | POST | `/api/teacher/students/:id/reset-password` | Giáo viên đặt lại mật khẩu |
 
@@ -119,3 +134,29 @@ vuon-toan-lop-3/
 - Nhúng font/icon tại chỗ để offline 100% cả chữ và biểu tượng.
 - Thực hiện deploy thật (cần tài khoản hosting/tên miền của trường).
 - Thêm biểu đồ theo tuần/tháng và xuất phiếu bồi dưỡng PDF theo dạng bài hay sai.
+
+## 8. Track B — Dạng bài "Ước lượng trước khi tính đúng"
+
+Dạng luyện tập mới cho phép nhân/chia: học sinh **phải chốt ước lượng (một số hoặc một khoảng) trước**, rồi mới
+được nhập kết quả tính chính xác. Server là nơi duy nhất biết đáp án, chấm, và ép thứ tự hai bước.
+
+**Cách vào bài (B-01):** menu bên trái → biểu tượng máy tính **"Ước Lượng Trước Khi Tính"**, hoặc Bài 41
+("Ôn tập phép nhân, phép chia trong phạm vi 100, 1000") → bộ `uoc-luong-nhan-chia`. Cùng trang làm bài `lesson.html`
+với mọi bộ đề khác; điểm, sao, tiến độ đi qua `POST /api/submissions` sẵn có.
+
+**Quy tắc chấm (B-03) — E là kết quả chính xác của phép tính:**
+
+| Cách ước lượng | Hợp lý khi |
+|---|---|
+| Một số `v` | `ceil(0,85·E) ≤ v ≤ floor(1,15·E)` (sai số ±15%, tính bằng số nguyên) |
+| Một khoảng `[từ, đến]` | `từ ≤ E ≤ đến` **và** `đến − từ ≤ 30% của E` |
+
+Điểm mỗi câu: 50% cho ước lượng hợp lý + 50% cho kết quả tính chính xác (phản hồi hai phần tách bạch — B-06).
+Bộ sinh câu hỏi tất định: `node tools/gen-estimation-fixtures.js` (seed `20261104`, 12 câu: 6 nhân, 6 chia, chỉ phép chia hết).
+Lý do thiết kế và các phương án đã loại: xem `DECISIONS.md`. Truy vết yêu cầu → code → test: xem `REQUIREMENTS.md`.
+
+**Kiểm thử (B-08/B-09/B-10):** `npm test` chạy 35 test (16 unit cho module chấm điểm thuần + 19 test tích hợp
+khởi chạy server thật với SQLite tạm). CI (`.github/workflows/ci.yml`) chạy `npm ci` + `npm test` trên Node 18, 20 và 22.
+
+**Giới hạn đã biết:** mỗi câu chỉ có một lượt chốt ước lượng và một lượt nộp kết quả (chống dò đáp án); chỉ dùng phép chia
+hết; chưa có giới hạn tần suất gọi API; thông tin triển khai thật (đổi `SESSION_SECRET`, mật khẩu mẫu) giữ nguyên theo B-07.

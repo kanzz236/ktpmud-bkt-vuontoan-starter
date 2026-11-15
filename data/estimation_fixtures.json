@@ -1,98 +1,90 @@
-[
-  {
-    "id": "est_01",
-    "question": "Ước lượng kết quả phép nhân: 48 × 6",
-    "num1": 48,
-    "num2": 6,
-    "operator": "*",
-    "hint": "Gợi ý: Làm tròn 48 thành số tròn chục gần nhất (50) rồi nhân với 6."
-  },
-  {
-    "id": "est_02",
-    "question": "Ước lượng kết quả phép nhân: 32 × 8",
-    "num1": 32,
-    "num2": 8,
-    "operator": "*",
-    "hint": "Gợi ý: Làm tròn 32 về 30 rồi nhân nhẩm với 8."
-  },
-  {
-    "id": "est_03",
-    "question": "Ước lượng kết quả phép nhân: 198 × 4",
-    "num1": 198,
-    "num2": 4,
-    "operator": "*",
-    "hint": "Gợi ý: 198 rất gần với 200, thử lấy 200 × 4 xem sao nhé!"
-  },
-  {
-    "id": "est_04",
-    "question": "Ước lượng kết quả phép nhân: 152 × 5",
-    "num1": 152,
-    "num2": 5,
-    "operator": "*",
-    "hint": "Gợi ý: Làm tròn 152 về 150 rồi nhân với 5."
-  },
-  {
-    "id": "est_05",
-    "question": "Ước lượng kết quả phép nhân: 295 × 3",
-    "num1": 295,
-    "num2": 3,
-    "operator": "*",
-    "hint": "Gợi ý: Làm tròn 295 lên 300 để tính nhẩm nhanh."
-  },
-  {
-    "id": "est_06",
-    "question": "Ước lượng kết quả phép nhân: 410 × 2",
-    "num1": 410,
-    "num2": 2,
-    "operator": "*",
-    "hint": "Gợi ý: Làm tròn 410 về số tròn trăm gần nhất (400) rồi nhân đôi."
-  },
-  {
-    "id": "est_07",
-    "question": "Ước lượng kết quả phép chia: 81 ÷ 4",
-    "num1": 81,
-    "num2": 4,
-    "operator": "/",
-    "hint": "Gợi ý: Tìm số tròn chục gần 81 nhất chia hết cho 4 (là số 80)."
-  },
-  {
-    "id": "est_08",
-    "question": "Ước lượng kết quả phép chia: 148 ÷ 5",
-    "num1": 148,
-    "num2": 5,
-    "operator": "/",
-    "hint": "Gợi ý: Làm tròn 148 lên 150 rồi chia nhẩm cho 5."
-  },
-  {
-    "id": "est_09",
-    "question": "Ước lượng kết quả phép chia: 243 ÷ 6",
-    "num1": 243,
-    "num2": 6,
-    "operator": "/",
-    "hint": "Gợi ý: Dựa vào bảng chia 6, số 243 rất gần với 240."
-  },
-  {
-    "id": "est_10",
-    "question": "Ước lượng kết quả phép chia: 358 ÷ 9",
-    "num1": 358,
-    "num2": 9,
-    "operator": "/",
-    "hint": "Gợi ý: Làm tròn 358 lên 360 rồi chia nhẩm cho 9 (36 ÷ 9 = 4)."
-  },
-  {
-    "id": "est_11",
-    "question": "Ước lượng kết quả phép chia: 492 ÷ 7",
-    "num1": 492,
-    "num2": 7,
-    "operator": "/",
-    "hint": "Gợi ý: Dựa vào bảng chia 7, 492 gần với số 490."
-  },
-  {
-    "id": "est_12",
-    "question": "Ước lượng kết quả phép chia: 635 ÷ 8",
-    "num1": 635,
-    "num2": 8,
-    "operator": "/",
-    "hint": "Gợi ý: Trong bảng chia 8 có 64 ÷ 8 = 8, thử làm tròn 635 lên 640 nhé!"
-  }
-]
+{
+  "seed": 20261104,
+  "generator": "server/estimationScorer.js#generateFixtures",
+  "items": [
+    {
+      "id": "est-01",
+      "op": "*",
+      "a": 23,
+      "b": 7,
+      "strategy": "round-tens"
+    },
+    {
+      "id": "est-02",
+      "op": "/",
+      "a": 616,
+      "b": 7,
+      "strategy": "compatible-multiples"
+    },
+    {
+      "id": "est-03",
+      "op": "*",
+      "a": 176,
+      "b": 5,
+      "strategy": "round-hundreds"
+    },
+    {
+      "id": "est-04",
+      "op": "/",
+      "a": 138,
+      "b": 2,
+      "strategy": "compatible-multiples"
+    },
+    {
+      "id": "est-05",
+      "op": "*",
+      "a": 39,
+      "b": 3,
+      "strategy": "round-tens"
+    },
+    {
+      "id": "est-06",
+      "op": "/",
+      "a": 212,
+      "b": 4,
+      "strategy": "compatible-multiples"
+    },
+    {
+      "id": "est-07",
+      "op": "*",
+      "a": 354,
+      "b": 7,
+      "strategy": "round-hundreds"
+    },
+    {
+      "id": "est-08",
+      "op": "/",
+      "a": 488,
+      "b": 8,
+      "strategy": "compatible-multiples"
+    },
+    {
+      "id": "est-09",
+      "op": "*",
+      "a": 89,
+      "b": 7,
+      "strategy": "round-tens"
+    },
+    {
+      "id": "est-10",
+      "op": "/",
+      "a": 106,
+      "b": 2,
+      "strategy": "compatible-multiples"
+    },
+    {
+      "id": "est-11",
+      "op": "*",
+      "a": 443,
+      "b": 8,
+      "strategy": "round-hundreds"
+    },
+    {
+      "id": "est-12",
+      "op": "/",
+      "a": 152,
+      "b": 4,
+      "strategy": "compatible-multiples"
+    }
+  ]
+}

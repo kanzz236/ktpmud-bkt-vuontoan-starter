@@ -8,6 +8,7 @@
   const startedAt = Date.now();
   const answers = {};
   let questions = [];
+  let estimateState = {}; // Track B: trạng thái từng bước đã lưu trên server (khôi phục sau F5)
 
   const container = document.getElementById('questions-container');
   const progressBar = document.getElementById('lesson-progress');
@@ -22,6 +23,10 @@
   function render() {
     container.innerHTML = questions.map((q, idx) => {
       let body = '';
+      if (q.type === 'estimate') {
+        // Track B: khung trống, assets/js/pages/estimate.js dựng nội dung (an toàn, bằng textContent)
+        return `<article data-estimate-index="${idx}"></article>`;
+      }
       if (q.type === 'multiple-choice' && q.options) {
         body = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3">${q.options.map((op, i) => `
           <button type="button" data-q="${q.id}" data-val="${['A', 'B', 'C', 'D'][i]}" class="opt-btn text-left px-4 py-3 rounded-2xl bg-surface-container-low hover:bg-secondary-container/60 font-body-md transition-all">
@@ -42,6 +47,13 @@
         <h3 class="font-headline-md text-headline-md mt-1">${q.prompt}</h3>${body}</article>`;
     }).join('');
 
+    container.querySelectorAll('[data-estimate-index]').forEach(node => {
+      const idx = Number(node.dataset.estimateIndex);
+      const q = questions[idx];
+      window.EstimateUI.mount(node, q, idx, estimateState[q.id], {
+        onDone: (qid, exactGiven) => { answers[qid] = exactGiven; updateProgress(); },
+      });
+    });
     container.querySelectorAll('.opt-btn').forEach(btn => btn.addEventListener('click', () => {
       answers[btn.dataset.q] = btn.dataset.val;
       container.querySelectorAll(`.opt-btn[data-q="${btn.dataset.q}"]`).forEach(b =>
@@ -67,6 +79,10 @@
       }
       const data = await window.MathAPI.get(`/api/question-sets/${encodeURIComponent(setId)}/questions`);
       questions = data.questions;
+      if (questions.some(q => q.type === 'estimate')) {
+        const st = await window.MathAPI.get(`/api/estimation/sets/${encodeURIComponent(setId)}/state`);
+        estimateState = st.questions || {};
+      }
       document.getElementById('set-kind').textContent = `Bộ bài: ${setId} • ${questions.length} câu`;
       render();
     } catch (err) { container.innerHTML = `<p class="font-body-md">Chưa tải được bài: ${err.message}</p>`; }
@@ -82,6 +98,16 @@
       box.innerHTML = `<div class="text-4xl mb-1">${r.scorePercent >= 80 ? '🎉' : r.scorePercent >= 50 ? '💪' : '🌱'}</div>
         <h3 class="font-headline-md text-headline-md">Em đạt ${r.scorePercent}% — đúng ${r.correctCount}/${r.totalCount} câu!</h3>
         <p class="font-body-md mt-1">${r.starsEarned ? `Nhận thêm ⭐ +${r.starsEarned} Sao vàng.` : 'Điểm chưa vượt lần tốt nhất nên chưa cộng thêm sao.'} Kết quả đã được lưu vào hồ sơ.</p>`;
+      if (questions.some(q => q.type === 'estimate')) {
+        // Server đã xoá trạng thái từng bước sau khi nộp -> cho làm lại bộ bài từ đầu
+        const again = document.createElement('button');
+        again.type = 'button';
+        again.textContent = 'Làm lại bộ bài ước lượng';
+        again.className = 'est-btn';
+        again.addEventListener('click', () => location.reload());
+        box.appendChild(again);
+        again.focus();
+      }
       box.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } catch (err) { alert(`Chưa nộp được bài: ${err.message}`); }
   });

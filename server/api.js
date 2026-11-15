@@ -7,8 +7,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const db = require('./db');
-const { calculateExactResult, evaluateEstimation } = require('./estimationScorer');
-const estimationFixtures = require('../data/estimation_fixtures.json');
+const { registerEstimationRoutes, scoreEstimateQuestion, clearSteps } = require('./estimationApi'); // Track B
 const { setAuthCookie, clearAuthCookie, requireAuth, requireTeacher } = require('./auth');
 
 const router = express.Router();
@@ -174,8 +173,17 @@ router.post('/submissions', requireAuth, (req, res) => {
   if (!meta) return res.status(400).json({ error: 'Bộ bài không hợp lệ.' });
   const questions = db.prepare('SELECT * FROM questions WHERE set_id=? ORDER BY sort_order').all(setId);
   let earned = 0, max = 0, correct = 0;
+  const storedAnswers = { ...answers };
   const detail = questions.map(q => {
     max += q.points;
+    // Track B: câu 'estimate' được chấm từ trạng thái từng bước đã lưu trên server, KHÔNG tin đáp án client gửi.
+    if (q.type === 'estimate') {
+      const r = scoreEstimateQuestion(db, req.user.id, q);
+      earned += r.earned; if (r.correct) correct++;
+      storedAnswers[q.id] = r.exactGiven == null ? '' : String(r.exactGiven);
+      return { questionId: q.id, correct: r.correct, correctAnswer: q.correct_answer,
+        estimateReasonable: r.estOk, exactCorrect: r.exactOk };
+    }
     const given = answers[q.id] == null ? '' : String(answers[q.id]).trim().toLowerCase();
     const ok = given === String(q.correct_answer).trim().toLowerCase();
     if (ok) { earned += q.points; correct++; }
@@ -190,12 +198,13 @@ router.post('/submissions', requireAuth, (req, res) => {
 
   const tx = db.transaction(() => {
     db.prepare(`INSERT INTO attempts (user_id,kind,ref_id,score_percent,correct_count,total_count,stars_earned,duration_sec,answers_json)
-      VALUES (?,?,?,?,?,?,?,?,?)`).run(req.user.id, meta.kind, setId, percent, correct, questions.length, starsEarned, Number(durationSec) || 0, JSON.stringify(answers));
+      VALUES (?,?,?,?,?,?,?,?,?)`).run(req.user.id, meta.kind, setId, percent, correct, questions.length, starsEarned, Number(durationSec) || 0, JSON.stringify(storedAnswers));
     db.prepare(`INSERT INTO progress (user_id,lesson_id,best_score,completed,updated_at) VALUES (?,?,?,?,datetime('now','localtime'))
       ON CONFLICT(user_id,lesson_id) DO UPDATE SET best_score=MAX(best_score,excluded.best_score),
         completed=MAX(completed,excluded.completed), updated_at=datetime('now','localtime')`)
       .run(req.user.id, meta.lessonId, percent, percent >= 50 ? 1 : 0);
     if (starsEarned) db.prepare('UPDATE users SET total_stars=total_stars+? WHERE id=?').run(starsEarned, req.user.id);
+    clearSteps(db, req.user.id, setId); // Track B: nộp xong thì lần làm sau bắt đầu lại từ bước 1
   });
   tx();
   const me = db.prepare('SELECT total_stars FROM users WHERE id=?').get(req.user.id);
@@ -350,6 +359,7 @@ router.post('/game-scores', requireAuth, (req, res) => {
     db.prepare(`INSERT INTO attempts (user_id,kind,ref_id,score_percent,correct_count,total_count,stars_earned,duration_sec,answers_json)
       VALUES (?, 'game', ?, ?, 0, 0, ?, ?, '{}')`).run(req.user.id, gameId, raw, starsEarned, Number(durationSec) || 0);
     if (starsEarned) db.prepare('UPDATE users SET total_stars=total_stars+? WHERE id=?').run(starsEarned, req.user.id);
+    clearSteps(db, req.user.id, setId); // Track B: nộp xong thì lần làm sau bắt đầu lại từ bước 1
   });
   tx();
   const me = db.prepare('SELECT total_stars FROM users WHERE id=?').get(req.user.id);
@@ -570,78 +580,9 @@ router.get('/teacher/analytics', requireTeacher, (req, res) => {
 
 /* Kiểm tra nhanh tình trạng server (dùng khi deploy để hosting tự giám sát) */
 router.get('/health', (req, res) => res.json({ ok: true, time: new Date().toISOString() }));
-/* ================= TRACK B: ƯỚC LƯỢNG TRƯỚC KHI TÍNH ĐÚNG ================= */
+/* ================= TRACK B: ƯỚC LƯỢNG TRƯỚC KHI TÍNH ĐÚNG =================
+ * Route /api/estimation/* nằm ở server/estimationApi.js (luồng 2 bước do server ép).
+ * Chấm điểm cả bộ vẫn đi qua POST /api/submissions ở trên. */
+registerEstimationRoutes(router, db, requireAuth);
 
-/**
- * B-04: Lấy danh sách câu hỏi ước lượng
- * TUYỆT ĐỐI KHÔNG trả về kết quả đúng hoặc công thức gốc, 
- * chỉ gửi id, câu hỏi và gợi ý xuống trình duyệt.
- */
-router.get('/estimation/questions', requireAuth, (req, res) => {
-  const safeQuestions = estimationFixtures.map(({ id, question, hint }) => ({
-    id,
-    question,
-    hint
-  }));
-  res.json({ questions: safeQuestions });
-});
-
-/**
- * B-03, B-05: Chấm điểm ước lượng và lưu vào DB / lịch sử attempts
- */
-router.post('/estimation/submit', requireAuth, (req, res) => {
-  const { questionId, userEstimation } = req.body || {};
-
-  // Validate đầu vào
-  if (!questionId || typeof userEstimation !== 'number' || Number.isNaN(userEstimation)) {
-    return res.status(400).json({ error: 'Dữ liệu không hợp lệ. Vui lòng nhập một số.' });
-  }
-
-  // Tìm câu hỏi trong 12 fixtures
-  const item = estimationFixtures.find(q => q.id === questionId);
-  if (!item) {
-    return res.status(404).json({ error: 'Không tìm thấy câu hỏi ước lượng.' });
-  }
-
-  // B-03: Tính toán tất định bằng backend code (không dùng LLM)
-  const exactResult = calculateExactResult(item.num1, item.num2, item.operator);
-  const evaluation = evaluateEstimation(userEstimation, exactResult, 20); // Biên độ sai số 20%
-
-  // B-05: Lưu kết quả vào bảng attempts để track tiến độ bài làm
-  const scorePercent = evaluation.isReasonable ? 100 : 0;
-  const starsEarned = evaluation.isReasonable ? 5 : 0; // Thưởng 5 sao nếu ước lượng hợp lý
-
-  const tx = db.transaction(() => {
-    db.prepare(`
-      INSERT INTO attempts (user_id, kind, ref_id, score_percent, correct_count, total_count, stars_earned, duration_sec, answers_json)
-      VALUES (?, 'estimation', ?, ?, ?, 1, ?, 0, ?)
-    `).run(
-      req.user.id, 
-      questionId, 
-      scorePercent, 
-      evaluation.isReasonable ? 1 : 0, 
-      starsEarned, 
-      JSON.stringify({ userEstimation, exactResult })
-    );
-
-    if (starsEarned) {
-      db.prepare('UPDATE users SET total_stars = total_stars + ? WHERE id = ?').run(starsEarned, req.user.id);
-    }
-  });
-  tx();
-
-  const me = db.prepare('SELECT total_stars FROM users WHERE id = ?').get(req.user.id);
-
-  res.json({
-    success: true,
-    questionId,
-    userEstimation,
-    exactResult,
-    isReasonable: evaluation.isReasonable,
-    toleranceRange: evaluation.toleranceRange,
-    message: evaluation.message,
-    starsEarned,
-    totalStars: me.total_stars
-  });
-});
 module.exports = router;

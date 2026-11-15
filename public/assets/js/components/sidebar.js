@@ -51,6 +51,7 @@ window.MathApp.components.Sidebar = {
     { id: 'index', label: 'Trang Chủ', href: 'index.html', icon: 'home' },
     { id: 'curriculum', label: 'Mục Lục SGK', href: 'muc-luc.html', icon: 'menu_book' },
     { id: 'exercise', label: 'Phòng Luyện Tập', href: 'exercise.html', icon: 'edit_note' },
+    { id: 'estimate', label: 'Ước Lượng Trước Khi Tính', href: 'lesson.html?lesson=bai-41&set=uoc-luong-nhan-chia', icon: 'calculate' },
     { id: 'games', label: 'Đấu Trường Trò Chơi', href: 'game.html', icon: 'sports_esports' },
     { id: 'leaderboard', label: 'Bảng Xếp Hạng', href: 'leaderboard.html', icon: 'emoji_events' },
     { id: 'teacher', label: 'Góc Giáo Viên', href: 'schedule.html', icon: 'school', requireTeacher: true },
