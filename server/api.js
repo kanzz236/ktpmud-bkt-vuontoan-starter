@@ -7,6 +7,8 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const db = require('./db');
+const { calculateExactResult, evaluateEstimation } = require('./estimationScorer');
+const estimationFixtures = require('../data/estimation_fixtures.json');
 const { setAuthCookie, clearAuthCookie, requireAuth, requireTeacher } = require('./auth');
 
 const router = express.Router();
@@ -568,5 +570,78 @@ router.get('/teacher/analytics', requireTeacher, (req, res) => {
 
 /* Kiểm tra nhanh tình trạng server (dùng khi deploy để hosting tự giám sát) */
 router.get('/health', (req, res) => res.json({ ok: true, time: new Date().toISOString() }));
+/* ================= TRACK B: ƯỚC LƯỢNG TRƯỚC KHI TÍNH ĐÚNG ================= */
 
+/**
+ * B-04: Lấy danh sách câu hỏi ước lượng
+ * TUYỆT ĐỐI KHÔNG trả về kết quả đúng hoặc công thức gốc, 
+ * chỉ gửi id, câu hỏi và gợi ý xuống trình duyệt.
+ */
+router.get('/estimation/questions', requireAuth, (req, res) => {
+  const safeQuestions = estimationFixtures.map(({ id, question, hint }) => ({
+    id,
+    question,
+    hint
+  }));
+  res.json({ questions: safeQuestions });
+});
+
+/**
+ * B-03, B-05: Chấm điểm ước lượng và lưu vào DB / lịch sử attempts
+ */
+router.post('/estimation/submit', requireAuth, (req, res) => {
+  const { questionId, userEstimation } = req.body || {};
+
+  // Validate đầu vào
+  if (!questionId || typeof userEstimation !== 'number' || Number.isNaN(userEstimation)) {
+    return res.status(400).json({ error: 'Dữ liệu không hợp lệ. Vui lòng nhập một số.' });
+  }
+
+  // Tìm câu hỏi trong 12 fixtures
+  const item = estimationFixtures.find(q => q.id === questionId);
+  if (!item) {
+    return res.status(404).json({ error: 'Không tìm thấy câu hỏi ước lượng.' });
+  }
+
+  // B-03: Tính toán tất định bằng backend code (không dùng LLM)
+  const exactResult = calculateExactResult(item.num1, item.num2, item.operator);
+  const evaluation = evaluateEstimation(userEstimation, exactResult, 20); // Biên độ sai số 20%
+
+  // B-05: Lưu kết quả vào bảng attempts để track tiến độ bài làm
+  const scorePercent = evaluation.isReasonable ? 100 : 0;
+  const starsEarned = evaluation.isReasonable ? 5 : 0; // Thưởng 5 sao nếu ước lượng hợp lý
+
+  const tx = db.transaction(() => {
+    db.prepare(`
+      INSERT INTO attempts (user_id, kind, ref_id, score_percent, correct_count, total_count, stars_earned, duration_sec, answers_json)
+      VALUES (?, 'estimation', ?, ?, ?, 1, ?, 0, ?)
+    `).run(
+      req.user.id, 
+      questionId, 
+      scorePercent, 
+      evaluation.isReasonable ? 1 : 0, 
+      starsEarned, 
+      JSON.stringify({ userEstimation, exactResult })
+    );
+
+    if (starsEarned) {
+      db.prepare('UPDATE users SET total_stars = total_stars + ? WHERE id = ?').run(starsEarned, req.user.id);
+    }
+  });
+  tx();
+
+  const me = db.prepare('SELECT total_stars FROM users WHERE id = ?').get(req.user.id);
+
+  res.json({
+    success: true,
+    questionId,
+    userEstimation,
+    exactResult,
+    isReasonable: evaluation.isReasonable,
+    toleranceRange: evaluation.toleranceRange,
+    message: evaluation.message,
+    starsEarned,
+    totalStars: me.total_stars
+  });
+});
 module.exports = router;
