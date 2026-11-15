@@ -1,0 +1,26 @@
+[
+  {
+    "id": "est_01",
+    "question": "Ước lượng và tính kết quả phép nhân: 48 × 12",
+    "num1": 48,
+    "num2": 12,
+    "operator": "*",
+    "hint": "Gợi ý: Thử làm tròn 48 thành 50 và 12 thành 10 để ước lượng nhanh nhé!"
+  },
+  {
+    "id": "est_02",
+    "question": "Ước lượng và tính kết quả phép nhân: 32 × 29",
+    "num1": 32,
+    "num2": 29,
+    "operator": "*",
+    "hint": "Gợi ý: Làm tròn 32 về 30 và 29 về 30 để nhẩm cho dễ."
+  },
+  {
+    "id": "est_03",
+    "question": "Ước lượng và tính kết quả phép chia: 815 ÷ 9",
+    "num1": 815,
+    "num2": 9,
+    "operator": "/",
+    "hint": "Gợi ý: Tìm số gần 815 nhất mà chia hết cho 9 (ví dụ 810)."
+  }
+]
