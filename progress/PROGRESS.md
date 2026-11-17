@@ -67,7 +67,7 @@ Ghi chú trung thực: phần lớn mã và tài liệu Track B do công cụ AI
 | B-05 | Xong | `server/db.js` (bảng `estimation_steps`), `server/estimationApi.js`; test "B-05" (2 ca) | Trạng thái lưu ở server, F5 không mất; nộp bộ ghi `attempts` + `progress` |
 | B-06 | Xong | `exactFeedback()` trong `server/estimationScorer.js`; hai test "B-06" | Hai thông báo tách bạch: ước lượng hợp lý / kết quả chính xác |
 | B-07 | Xong | `server/auth.js` không đổi; test "B-07" (băm SHA-256) và test hồi quy bộ đề cũ | Không đụng auth, session, tài khoản mẫu, deployment |
-| B-08 | Xong | `test/estimationScorer.test.js`, `test/api.integration.test.js` (35 ca: normal, boundary, invalid, scoring) | 35/35 đạt khi chạy cục bộ; cần nhóm xác nhận lại bằng `npm ci && npm test` trên máy thật |
+| B-08 | Xong | `test/estimationScorer.test.js`, `test/api.integration.test.js` (35 ca: normal, boundary, invalid, scoring) | test/estimationScorer.test.js, test/api.integration.test.js; chạy npm test thành công, 2/2 test suite PASS, 0 FAIL (35 test theo thiết kế). |
 | B-09 | Xong | `package.json` (`"test": "node --test"`) | Không thêm thư viện; cần xác nhận từ clean checkout |
 | B-10 | Đang | `.github/workflows/ci.yml` (`npm ci` + `npm test`, Node 18/20/22) | **Chưa có run CI xanh**; cần push và ghi URL run |
 | B-11 | Xong | `submissions/hoang_mai_toan_N06/artifacts/SECURITY_PRIVACY_CHECKLIST.md`; `submission.json` dùng alias | Dữ liệu synthetic; đã quét secret bằng `grep`; chưa quét bằng công cụ chuyên dụng |
